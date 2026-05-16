@@ -4,7 +4,8 @@ import {
   TrendingUp, Trash2, Edit, Plus, CheckCircle, XCircle 
 } from "lucide-react";
 import { collection, doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { db, storage } from "../lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { courses as initialCoursesData } from "../data/courses";
 interface AdminPageProps {
   setCurrentPage: (p: string) => void;
@@ -15,8 +16,9 @@ export default function AdminPage({ setCurrentPage, courses }: AdminPageProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [isAdding, setIsAdding] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [newCourse, setNewCourse] = useState({
-    id: Date.now(), title: "", instructor: "", price: 0, students: 0, image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3", category: "class-10", categoryLabel: "Class 10", originalPrice: 0, rating: 5.0, reviews: 0, duration: "10h", lessons: 20, modules: 5, level: "Beginner", badge: "New", tags: ["Science"], description: "", progress: 0, enrolled: false
+    id: Date.now(), title: "", instructor: "", price: 0, students: 0, image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3", category: "class-10", categoryLabel: "Class 10", originalPrice: 0, rating: 5.0, reviews: 0, duration: "10h", lessons: 20, modules: 5, level: "Beginner", badge: "New", tags: ["Science"], description: "", progress: 0, enrolled: false, customLink: ""
   });
 
   const handleDelete = async (firebaseId: string) => {
@@ -88,6 +90,22 @@ export default function AdminPage({ setCurrentPage, courses }: AdminPageProps) {
     const newModules = [...editingCourse.modulesList];
     newModules[mIndex].items[vIndex][field] = val;
     setEditingCourse({ ...editingCourse, modulesList: newModules });
+  };
+
+  const uploadToStorage = async (file: File, path: string) => {
+    setIsUploading(true);
+    try {
+      const storageRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      setIsUploading(false);
+      return url;
+    } catch (err) {
+      console.error(err);
+      setIsUploading(false);
+      alert("Upload failed.");
+      return null;
+    }
   };
 
   const handleSeedDatabase = async () => {
@@ -222,8 +240,19 @@ export default function AdminPage({ setCurrentPage, courses }: AdminPageProps) {
                         <input type="number" value={editingCourse.price} onChange={e => setEditingCourse({...editingCourse, price: Number(e.target.value)})} className="w-full bg-navy border border-blue-900/30 rounded-lg px-4 py-2 text-white text-sm" />
                       </div>
                       <div>
-                        <label className="text-slate-400 text-xs mb-1 block">Image URL</label>
-                        <input type="text" value={editingCourse.image} onChange={e => setEditingCourse({...editingCourse, image: e.target.value})} className="w-full bg-navy border border-blue-900/30 rounded-lg px-4 py-2 text-white text-sm" />
+                        <label className="text-slate-400 text-xs mb-1 block">Course Image (Upload from PC)</label>
+                        <input type="file" accept="image/*" onChange={async e => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const url = await uploadToStorage(file, "course_images");
+                            if (url) setEditingCourse({...editingCourse, image: url});
+                          }
+                        }} className="w-full bg-navy border border-blue-900/30 rounded-lg px-4 py-2 text-white text-xs" />
+                        <p className="text-[10px] text-slate-500 mt-1">Current: {editingCourse.image.substring(0, 40)}...</p>
+                      </div>
+                      <div>
+                        <label className="text-slate-400 text-xs mb-1 block">Custom Resource Link (Drive/etc)</label>
+                        <input type="text" value={editingCourse.customLink || ""} onChange={e => setEditingCourse({...editingCourse, customLink: e.target.value})} className="w-full bg-navy border border-blue-900/30 rounded-lg px-4 py-2 text-white text-sm" placeholder="https://..." />
                       </div>
                     </div>
                   </div>
@@ -253,6 +282,16 @@ export default function AdminPage({ setCurrentPage, courses }: AdminPageProps) {
                                 <option value="quiz">Quiz</option>
                               </select>
                               <input type="text" value={item.title} onChange={e => handleUpdateVideo(mIndex, vIndex, 'title', e.target.value)} className="flex-1 bg-navy-light border border-blue-900/30 rounded px-3 py-1.5 text-white text-xs" placeholder="Lesson Title" />
+                              <div className="flex flex-col gap-1">
+                                <input type="file" onChange={async e => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const url = await uploadToStorage(file, "lessons");
+                                    if (url) handleUpdateVideo(mIndex, vIndex, 'url', url);
+                                  }
+                                }} className="text-[10px] text-slate-400 w-32" />
+                                {item.url && <span className="text-[9px] text-green-400 truncate w-32">Uploaded!</span>}
+                              </div>
                               <input type="text" value={item.duration} onChange={e => handleUpdateVideo(mIndex, vIndex, 'duration', e.target.value)} className="w-20 bg-navy-light border border-blue-900/30 rounded px-3 py-1.5 text-slate-400 text-xs" placeholder="Duration" />
                               <button onClick={() => handleRemoveVideo(mIndex, vIndex)} className="text-red-400/70 hover:text-red-400 p-1"><XCircle size={14} /></button>
                             </div>
@@ -265,7 +304,9 @@ export default function AdminPage({ setCurrentPage, courses }: AdminPageProps) {
                     ))}
                   </div>
 
-                  <button onClick={handleSaveEdit} className="btn-primary w-full py-3">Save All Changes</button>
+                  <button onClick={handleSaveEdit} disabled={isUploading} className={`btn-primary w-full py-3 ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    {isUploading ? "Uploading Files..." : "Save All Changes"}
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-6">

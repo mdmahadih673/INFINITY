@@ -1,8 +1,9 @@
 import { useState } from "react";
-import {
-  Play, Clock, BookOpen, Users, Star, Award, Download,
-  ChevronDown, ChevronRight, Lock, CheckCircle, ArrowLeft,
-  FileText, MessageSquare, Trophy
+import { 
+  CheckCircle, Play, FileText, HelpCircle, 
+  Lock, ChevronDown, ChevronUp, Star, Users, 
+  Clock, Award, MessageCircle, ExternalLink,
+  BookOpen, Download, ArrowLeft, Trophy, MessageSquare
 } from "lucide-react";
 
 interface CourseDetailProps {
@@ -140,7 +141,11 @@ export default function CourseDetailPage({ course, setCurrentPage, isLoggedIn }:
                   {course.enrolled ? (
                     <div className="text-center py-2">
                       <p className="text-green-400 font-bold text-lg mb-1">✓ You're Enrolled!</p>
-                      <p className="text-slate-400 text-sm">Continue your learning journey</p>
+                      {course.customLink && (
+                        <button onClick={() => window.open(course.customLink, '_blank')} className="flex items-center justify-center gap-2 text-blue-400 hover:text-white transition-colors text-sm">
+                          Access Portal <ExternalLink size={14} />
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <>
@@ -264,7 +269,7 @@ export default function CourseDetailPage({ course, setCurrentPage, isLoggedIn }:
 
                     {openModule === mod.id && (
                       <div className="border-t border-blue-900/30">
-                        {mod.items.map((item, idx) => (
+                        {mod.items.map((item: any, idx: number) => (
                           <div key={idx} className="flex items-center gap-4 px-4 py-3 hover:bg-white/3 border-b border-blue-900/20 last:border-0">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                               item.done ? "bg-green-900/40 border border-green-700/40" :
@@ -291,8 +296,12 @@ export default function CourseDetailPage({ course, setCurrentPage, isLoggedIn }:
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-slate-500 text-xs">{item.duration}</span>
-                              {!item.free && !course.enrolled && (
-                                <Lock size={13} className="text-slate-600" />
+                              {item.url ? (
+                                <button onClick={() => window.open(item.url, '_blank')} className="text-blue-400 hover:text-blue-300">
+                                  {item.type === 'video' ? <Play size={14} /> : <FileText size={14} />}
+                                </button>
+                              ) : (
+                                (item.free || course.enrolled) ? <Play size={14} className="text-blue-400" /> : <Lock size={14} className="text-slate-600" />
                               )}
                               {item.free && (
                                 <span className="text-[10px] text-green-400 bg-green-900/20 border border-green-800/30 px-1.5 py-0.5 rounded-full">FREE</span>
