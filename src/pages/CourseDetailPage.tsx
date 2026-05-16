@@ -11,35 +11,7 @@ interface CourseDetailProps {
   isLoggedIn: boolean;
 }
 
-const modules = [
-  {
-    id: 1, title: "Introduction & Foundations", lessons: 12, duration: "8h 30m",
-    items: [
-      { title: "Course Overview & Study Plan", type: "video", duration: "12:00", free: true, done: true },
-      { title: "Key Concepts & Terminology", type: "video", duration: "18:30", free: true, done: true },
-      { title: "Chapter PDF Notes", type: "pdf", duration: "Download", free: true, done: false },
-      { title: "Foundation Quiz", type: "quiz", duration: "20 MCQ", free: false, done: false },
-    ]
-  },
-  {
-    id: 2, title: "Core Theory — Chapter 1", lessons: 15, duration: "10h 20m",
-    items: [
-      { title: "Theory Part 1: Basics", type: "video", duration: "22:00", free: false, done: false },
-      { title: "Theory Part 2: Advanced", type: "video", duration: "28:15", free: false, done: false },
-      { title: "Worked Examples", type: "video", duration: "35:00", free: false, done: false },
-      { title: "Assignment: Written Practice", type: "assignment", duration: "Submit", free: false, done: false },
-    ]
-  },
-  {
-    id: 3, title: "Core Theory — Chapter 2", lessons: 18, duration: "12h 45m",
-    items: [
-      { title: "Chapter Introduction", type: "video", duration: "15:00", free: false, done: false },
-      { title: "Deep Dive Session", type: "video", duration: "40:00", free: false, done: false },
-      { title: "Chapter Quiz", type: "quiz", duration: "25 MCQ", free: false, done: false },
-      { title: "Lecture Sheet PDF", type: "pdf", duration: "Download", free: false, done: false },
-    ]
-  },
-];
+
 
 const reviews = [
   { name: "Arif H.", rating: 5, text: "Exceptional course. The instructor explains everything with great clarity.", time: "2 days ago" },
@@ -269,7 +241,7 @@ export default function CourseDetailPage({ course, setCurrentPage, isLoggedIn }:
                   <button className="text-blue-400 text-sm hover:text-blue-300">Expand All</button>
                 </div>
 
-                {modules.map((mod) => (
+                {(course.modulesList || []).map((mod: any) => (
                   <div key={mod.id} className="glass-card rounded-xl overflow-hidden border border-blue-900/30">
                     <button
                       onClick={() => setOpenModule(openModule === mod.id ? 0 : mod.id)}

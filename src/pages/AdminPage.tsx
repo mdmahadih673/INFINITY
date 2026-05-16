@@ -1,9 +1,9 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { 
   BarChart3, Users, BookOpen, Settings, 
   TrendingUp, Trash2, Edit, Plus, CheckCircle, XCircle 
 } from "lucide-react";
-import { collection, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { courses as initialCoursesData } from "../data/courses";
 interface AdminPageProps {
@@ -14,6 +14,7 @@ interface AdminPageProps {
 export default function AdminPage({ setCurrentPage, courses }: AdminPageProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [isAdding, setIsAdding] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
   const [newCourse, setNewCourse] = useState({
     id: Date.now(), title: "", instructor: "", price: 0, students: 0, image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3", category: "class-10", categoryLabel: "Class 10", originalPrice: 0, rating: 5.0, reviews: 0, duration: "10h", lessons: 20, modules: 5, level: "Beginner", badge: "New", tags: ["Science"], description: "", progress: 0, enrolled: false
   });
@@ -33,13 +34,60 @@ export default function AdminPage({ setCurrentPage, courses }: AdminPageProps) {
     e.preventDefault();
     try {
       const newDocRef = doc(collection(db, "courses"));
-      await setDoc(newDocRef, { ...newCourse, id: Date.now() });
+      await setDoc(newDocRef, { ...newCourse, id: Date.now(), modulesList: [] });
       setIsAdding(false);
       setNewCourse({ ...newCourse, title: "", instructor: "", price: 0 });
     } catch (err) {
       console.error(err);
       alert("Failed to add course.");
     }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await updateDoc(doc(db, "courses", editingCourse.firebaseId), editingCourse);
+      setEditingCourse(null);
+      alert("Course updated successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update course.");
+    }
+  };
+
+  const handleAddModule = () => {
+    const newModules = [...(editingCourse.modulesList || [])];
+    newModules.push({ id: Date.now(), title: "New Module", items: [] });
+    setEditingCourse({ ...editingCourse, modulesList: newModules });
+  };
+
+  const handleRemoveModule = (mIndex: number) => {
+    const newModules = [...editingCourse.modulesList];
+    newModules.splice(mIndex, 1);
+    setEditingCourse({ ...editingCourse, modulesList: newModules });
+  };
+
+  const handleUpdateModuleTitle = (mIndex: number, val: string) => {
+    const newModules = [...editingCourse.modulesList];
+    newModules[mIndex].title = val;
+    setEditingCourse({ ...editingCourse, modulesList: newModules });
+  };
+
+  const handleAddVideo = (mIndex: number) => {
+    const newModules = [...editingCourse.modulesList];
+    newModules[mIndex].items.push({ title: "New Video", type: "video", duration: "10:00", free: false, done: false });
+    setEditingCourse({ ...editingCourse, modulesList: newModules });
+  };
+
+  const handleRemoveVideo = (mIndex: number, vIndex: number) => {
+    const newModules = [...editingCourse.modulesList];
+    newModules[mIndex].items.splice(vIndex, 1);
+    setEditingCourse({ ...editingCourse, modulesList: newModules });
+  };
+
+  const handleUpdateVideo = (mIndex: number, vIndex: number, field: string, val: any) => {
+    const newModules = [...editingCourse.modulesList];
+    newModules[mIndex].items[vIndex][field] = val;
+    setEditingCourse({ ...editingCourse, modulesList: newModules });
   };
 
   const handleSeedDatabase = async () => {
@@ -148,7 +196,80 @@ export default function AdminPage({ setCurrentPage, courses }: AdminPageProps) {
           {/* Manage Courses Tab */}
           {activeTab === "courses" && (
             <div>
-              <div className="flex items-center justify-between mb-6">
+              {editingCourse ? (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-white">Edit Course</h2>
+                    <button onClick={() => setEditingCourse(null)} className="btn-secondary text-sm px-4 py-2">
+                      <XCircle size={16} /> Cancel
+                    </button>
+                  </div>
+                  
+                  {/* Basic Details */}
+                  <div className="glass-card rounded-2xl p-6">
+                    <h3 className="text-white font-bold mb-4">Course Details</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-slate-400 text-xs mb-1 block">Course Title</label>
+                        <input type="text" value={editingCourse.title} onChange={e => setEditingCourse({...editingCourse, title: e.target.value})} className="w-full bg-navy border border-blue-900/30 rounded-lg px-4 py-2 text-white text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 text-xs mb-1 block">Instructor Name</label>
+                        <input type="text" value={editingCourse.instructor} onChange={e => setEditingCourse({...editingCourse, instructor: e.target.value})} className="w-full bg-navy border border-blue-900/30 rounded-lg px-4 py-2 text-white text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 text-xs mb-1 block">Price (৳)</label>
+                        <input type="number" value={editingCourse.price} onChange={e => setEditingCourse({...editingCourse, price: Number(e.target.value)})} className="w-full bg-navy border border-blue-900/30 rounded-lg px-4 py-2 text-white text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 text-xs mb-1 block">Image URL</label>
+                        <input type="text" value={editingCourse.image} onChange={e => setEditingCourse({...editingCourse, image: e.target.value})} className="w-full bg-navy border border-blue-900/30 rounded-lg px-4 py-2 text-white text-sm" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Curriculum Builder */}
+                  <div className="glass-card rounded-2xl p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-white font-bold">Curriculum (Modules & Videos)</h3>
+                      <button onClick={handleAddModule} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1">
+                        <Plus size={14} /> Add Module
+                      </button>
+                    </div>
+                    
+                    {(editingCourse.modulesList || []).map((mod: any, mIndex: number) => (
+                      <div key={mIndex} className="bg-navy border border-blue-900/30 rounded-lg p-4 mb-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <input type="text" value={mod.title} onChange={e => handleUpdateModuleTitle(mIndex, e.target.value)} className="flex-1 bg-white/5 border border-blue-800/30 rounded px-3 py-1.5 text-white text-sm font-semibold" placeholder="Module Title" />
+                          <button onClick={() => handleRemoveModule(mIndex)} className="text-red-400 hover:bg-red-500/20 p-1.5 rounded"><Trash2 size={16} /></button>
+                        </div>
+                        
+                        <div className="space-y-2 pl-4 border-l-2 border-blue-900/30 ml-2">
+                          {(mod.items || []).map((item: any, vIndex: number) => (
+                            <div key={vIndex} className="flex gap-2 items-center">
+                              <select value={item.type} onChange={e => handleUpdateVideo(mIndex, vIndex, 'type', e.target.value)} className="bg-navy-light border border-blue-900/30 rounded px-2 py-1.5 text-slate-300 text-xs">
+                                <option value="video">Video</option>
+                                <option value="pdf">PDF</option>
+                                <option value="quiz">Quiz</option>
+                              </select>
+                              <input type="text" value={item.title} onChange={e => handleUpdateVideo(mIndex, vIndex, 'title', e.target.value)} className="flex-1 bg-navy-light border border-blue-900/30 rounded px-3 py-1.5 text-white text-xs" placeholder="Lesson Title" />
+                              <input type="text" value={item.duration} onChange={e => handleUpdateVideo(mIndex, vIndex, 'duration', e.target.value)} className="w-20 bg-navy-light border border-blue-900/30 rounded px-3 py-1.5 text-slate-400 text-xs" placeholder="Duration" />
+                              <button onClick={() => handleRemoveVideo(mIndex, vIndex)} className="text-red-400/70 hover:text-red-400 p-1"><XCircle size={14} /></button>
+                            </div>
+                          ))}
+                          <button onClick={() => handleAddVideo(mIndex)} className="text-blue-400 text-xs mt-2 hover:underline flex items-center gap-1">
+                            <Plus size={12} /> Add Lesson
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button onClick={handleSaveEdit} className="btn-primary w-full py-3">Save All Changes</button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-white">Manage Courses</h2>
                 <button onClick={() => setIsAdding(!isAdding)} className="btn-primary text-sm px-4 py-2">
                   <Plus size={16} /> {isAdding ? "Cancel" : "Add New Course"}
@@ -208,7 +329,7 @@ export default function AdminPage({ setCurrentPage, courses }: AdminPageProps) {
                           <td className="p-4 text-slate-300 text-sm">{course.students}</td>
                           <td className="p-4">
                             <div className="flex items-center gap-2">
-                              <button onClick={() => alert("Edit course modal...")} className="p-2 bg-blue-900/30 text-blue-400 rounded hover:bg-blue-600/30 transition">
+                              <button onClick={() => setEditingCourse(course)} className="p-2 bg-blue-900/30 text-blue-400 rounded hover:bg-blue-600/30 transition">
                                 <Edit size={14} />
                               </button>
                               <button onClick={() => handleDelete(course.firebaseId)} className="p-2 bg-red-900/30 text-red-400 rounded hover:bg-red-600/30 transition">
@@ -222,6 +343,8 @@ export default function AdminPage({ setCurrentPage, courses }: AdminPageProps) {
                   </table>
                 </div>
               </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -8,6 +8,27 @@ export const categories = [
   { id: "inter-2", label: "Inter 2nd Year (HSC)", icon: "🏆", color: "#f97316" },
 ];
 
+export const defaultModules = [
+  {
+    id: 1, title: "Introduction & Foundations", lessons: 4, duration: "8h 30m",
+    items: [
+      { title: "Course Overview & Study Plan", type: "video", duration: "12:00", free: true, done: true },
+      { title: "Key Concepts & Terminology", type: "video", duration: "18:30", free: true, done: true },
+      { title: "Chapter PDF Notes", type: "pdf", duration: "Download", free: true, done: false },
+      { title: "Foundation Quiz", type: "quiz", duration: "20 MCQ", free: false, done: false },
+    ]
+  },
+  {
+    id: 2, title: "Core Theory — Chapter 1", lessons: 4, duration: "10h 20m",
+    items: [
+      { title: "Theory Part 1: Basics", type: "video", duration: "22:00", free: false, done: false },
+      { title: "Theory Part 2: Advanced", type: "video", duration: "28:15", free: false, done: false },
+      { title: "Worked Examples", type: "video", duration: "35:00", free: false, done: false },
+      { title: "Assignment: Written Practice", type: "assignment", duration: "Submit", free: false, done: false },
+    ]
+  },
+];
+
 export const courses = [
   {
     id: 1,
@@ -30,6 +51,7 @@ export const courses = [
     description: "Master every chapter of SSC Mathematics with HD video lessons, PDF notes, and regular quizzes.",
     progress: 65,
     enrolled: true,
+    modulesList: defaultModules,
   },
   {
     id: 2,
@@ -52,6 +74,7 @@ export const courses = [
     description: "In-depth Physics course covering all HSC topics with animated explanations and mock tests.",
     progress: 30,
     enrolled: true,
+    modulesList: defaultModules,
   },
   {
     id: 3,
@@ -74,6 +97,7 @@ export const courses = [
     description: "Complete Class 9 Science package with practical demonstrations and chapter-wise tests.",
     progress: 0,
     enrolled: false,
+    modulesList: defaultModules,
   },
   {
     id: 4,
@@ -96,6 +120,7 @@ export const courses = [
     description: "Comprehensive Bangla course for Inter 1st Year students covering prose, poetry, and grammar.",
     progress: 0,
     enrolled: false,
+    modulesList: defaultModules,
   },
   {
     id: 5,
@@ -118,6 +143,7 @@ export const courses = [
     description: "Full SSC English preparation with writing techniques, grammar rules, and reading comprehension.",
     progress: 0,
     enrolled: false,
+    modulesList: defaultModules,
   },
   {
     id: 6,
@@ -140,6 +166,7 @@ export const courses = [
     description: "Class 8 General Science covering all topics with engaging animations and experiments.",
     progress: 0,
     enrolled: false,
+    modulesList: defaultModules,
   },
   {
     id: 7,
@@ -162,6 +189,7 @@ export const courses = [
     description: "HSC Chemistry full preparation with detailed organic and inorganic chemistry explanations.",
     progress: 0,
     enrolled: false,
+    modulesList: defaultModules,
   },
   {
     id: 8,
@@ -184,6 +212,7 @@ export const courses = [
     description: "Build a strong math foundation for Class 6 with easy-to-understand video lessons.",
     progress: 0,
     enrolled: false,
+    modulesList: defaultModules,
   },
 ];
 
