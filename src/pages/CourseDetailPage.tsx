@@ -3,7 +3,8 @@ import {
   CheckCircle, Play, FileText, HelpCircle, 
   Lock, ChevronDown, ChevronUp, Star, Users, 
   Clock, Award, MessageCircle, ExternalLink,
-  BookOpen, Download, ArrowLeft, Trophy, MessageSquare
+  BookOpen, Download, ArrowLeft, Trophy, MessageSquare,
+  ChevronRight
 } from "lucide-react";
 
 interface CourseDetailProps {
